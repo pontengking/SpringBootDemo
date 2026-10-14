@@ -1,0 +1,65 @@
+# All handled API responses use HTTP 200. Check status SUCCESS/FAIL and errorCode in JSON.
+# Business results are nested under data; X-Trace-Id matches the response traceId.
+### HTTP Client / IntelliJ / VS Code REST Client
+@baseUrl = http://localhost:8080
+### Create book
+POST {{baseUrl}}/api/books
+Authorization: Basic reader change-me
+Accept: application/json
+Content-Type: application/json
+
+{"title":"Effective Java","author":"Joshua Bloch","price":45.00}
+
+### Search, zero-based pages
+POST {{baseUrl}}/api/books/search
+Authorization: Basic reader change-me
+Accept: application/json
+Content-Type: application/json
+
+{
+  "query": "java",
+  "page": 0,
+  "size": 10
+}
+
+### Read book
+GET {{baseUrl}}/api/books/1
+Authorization: Basic reader change-me
+Accept: application/json
+
+### Update
+PUT {{baseUrl}}/api/books/1
+Authorization: Basic reader change-me
+Accept: application/json
+Content-Type: application/json
+
+{"title":"Effective Java","author":"Joshua Bloch","price":49.00}
+
+### Place order
+POST {{baseUrl}}/api/orders
+Authorization: Basic reader change-me
+Accept: application/json
+Content-Type: application/json
+
+{"bookId":1,"quantity":2}
+
+### Join orders and books
+POST {{baseUrl}}/api/orders/search
+Authorization: Basic reader change-me
+Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 0,
+  "size": 10
+}
+
+### External API
+GET {{baseUrl}}/api/external/google
+Authorization: Basic reader change-me
+Accept: application/json
+
+### Delete (HTTP 200, status FAIL / errorCode CONFLICT when referenced by an order)
+DELETE {{baseUrl}}/api/books/1
+Authorization: Basic reader change-me
+Accept: application/json

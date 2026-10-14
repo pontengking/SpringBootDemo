@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Console + rolling file logging. Spring Boot picks this up automatically because
+  it is on the classpath as logback-spring.xml. The MDC traceId set by
+  HttpLoggingFilter is carried into both destinations via %X{traceId}.
+-->
+<configuration>
+	<property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+	<property name="LOG_FILE" value="${LOG_FILE:-book-order}"/>
+	<property name="LOG_PATTERN"
+		value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [traceId=%X{traceId}] %logger{36} - %msg%n"/>
+
+	<!-- Honor APP_USER-style overrides: application level stays configurable. -->
+	<springProperty scope="context" name="APP_LEVEL"
+		source="logging.level.com.example.bookorder" defaultValue="INFO"/>
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${LOG_PATTERN}</pattern>
+			<charset>UTF-8</charset>
+		</encoder>
+	</appender>
+
+	<!-- Rolling file: daily rollover, capped by size, retained for a bounded window. -->
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_DIR}/${LOG_FILE}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_DIR}/${LOG_FILE}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize>
+			<maxHistory>14</maxHistory>
+			<totalSizeCap>500MB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<pattern>${LOG_PATTERN}</pattern>
+			<charset>UTF-8</charset>
+		</encoder>
+	</appender>
+
+	<!-- Application loggers: level driven by the existing property / HTTP_LOG_LEVEL env var. -->
+	<logger name="com.example.bookorder" level="${APP_LEVEL}"/>
+
+	<root level="INFO">
+		<appender-ref ref="CONSOLE"/>
+		<appender-ref ref="FILE"/>
+	</root>
+</configuration>
