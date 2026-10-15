@@ -12,18 +12,20 @@ import com.example.bookorder.controller.dto.response.BaseResponse;
 import com.example.bookorder.integration.spi.ExternalApiClient;
 import com.example.bookorder.services.response.ExternalServiceResponse;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Validated
 @Slf4j
+@RequiredArgsConstructor
 public class ExternalFetchService {
 
 	/**
 	 * Only used as a fallback for single-client / test-fixture (@MockitoBean)
 	 * setups.
 	 */
-	private List<ExternalApiClient> externalApiClients;
+	private final List<ExternalApiClient> externalApiClients;
 
 	/**
 	 * Resolve the client for the given provider key from the SPI registry and

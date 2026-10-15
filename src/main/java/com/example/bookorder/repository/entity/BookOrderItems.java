@@ -5,6 +5,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,13 +32,13 @@ public class BookOrderItems implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long orderItemId;
 
-	@Column(name = "order_id", insertable = false, updatable = false)
+	@Column(name = "order_id", nullable = false)
 	private Long orderId;
 
 	@ToString.Exclude
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "book_id", referencedColumnName = "book_id", nullable = false)
-	private Books book;
+	private Books bookId;
 
 	@Column(name = "quantity", nullable = false)
 	private Integer quantity;
@@ -46,14 +49,12 @@ public class BookOrderItems implements Serializable {
 	@Column(name = "item_total", nullable = false, precision = 12, scale = 2)
 	private BigDecimal itemTotal;
 
+	@CreationTimestamp
 	@Column(name = "created_at", nullable = false)
 	private Date createdAt;
 
+	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	private Date updatedAt;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false)
-	private BookOrders bookOrder;
 
 }

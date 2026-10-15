@@ -19,17 +19,18 @@ import com.example.bookorder.services.vo.BookOrdersSearchVO;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 
 @Validated
 @RestController
 @RequestMapping("/bookOrders")
+@RequiredArgsConstructor
 public class BookOrdersController {
 
-	private BookOrdersService bookOrdersService;
-	private BookOrderConverter bookOrderConverter;
-
+	private final BookOrdersService bookOrdersService;
+	private final BookOrderConverter bookOrderConverter;
 	@PostMapping
-	public String save(@Valid @RequestBody List<BookOrderVO> vOs) {
+	public String save(@Valid @RequestBody BookOrderVO vOs) {
 		return bookOrdersService.saveBookOrder(vOs).toString();
 	}
 
@@ -46,9 +47,10 @@ public class BookOrdersController {
 	}
 
 	@GetMapping
-	public Page<BookOrderVO> query(@Valid @NotNull @RequestBody BookOrderSearchRequest request) {
+	public Page<BookOrderResponse> query(@Valid @NotNull @RequestBody BookOrderSearchRequest request) {
 		Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize());
 		BookOrdersSearchVO bookSearchVO = bookOrderConverter.convert2SearchBookOrderVO(request);
-		return bookOrdersService.queryBookOrdersByCriteria(bookSearchVO, pageable);
+		return bookOrdersService.queryBookOrdersByCriteria(bookSearchVO, pageable)
+				.map(bookOrderConverter::convert2Response);
 	}
 }

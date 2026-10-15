@@ -27,9 +27,7 @@ CREATE TABLE book_order_items (
     unit_price DECIMAL(12, 2) NOT NULL,
     item_total DECIMAL(12, 2) NOT NULL,
     created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES book_orders(order_id),
-    CONSTRAINT fk_order_items_book FOREIGN KEY (book_id) REFERENCES books(book_id)
+    updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_book_orders_user_id ON book_orders(user_id);

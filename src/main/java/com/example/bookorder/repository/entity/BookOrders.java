@@ -2,9 +2,10 @@ package com.example.bookorder.repository.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -38,17 +39,14 @@ public class BookOrders implements Serializable {
 	@Size(max = 32, message = "Order type should not be longer than 32 characters")
 	private String orderType;
 
-	@ToString.Exclude
-	@lombok.Builder.Default
-	@OneToMany(mappedBy = "bookOrder", cascade = CascadeType.ALL)
-	private List<BookOrderItems> bookOrderItems = new ArrayList<>();
-
 	@Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
 	private BigDecimal totalAmount;
 
+	@CreationTimestamp
 	@Column(name = "created_at", nullable = false)
 	private Date createdAt;
 
+	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	private Date updatedAt;
 

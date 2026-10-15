@@ -11,6 +11,8 @@ import com.example.bookorder.controller.dto.response.ExternalResponse;
 import com.example.bookorder.services.ExternalFetchService;
 import com.example.bookorder.services.response.ExternalServiceResponse;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * External API: fetch page metadata through the service integration boundary.
  * Request headers: Authorization: Basic credentials; Content-Type:
@@ -20,11 +22,12 @@ import com.example.bookorder.services.response.ExternalServiceResponse;
  */
 @Validated
 @RestController
-@RequestMapping({"/api/external", "/external"})
+@RequestMapping({"/external"})
+@RequiredArgsConstructor
 public class ExternalController {
 
-	private ExternalFetchService externalFetchService;
-	private ExternalApiConverter converter;
+	private final ExternalFetchService externalFetchService;
+	private final ExternalApiConverter converter;
 
 	/**
 	 * Fetch external page metadata through the business layer and integration SPI.

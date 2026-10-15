@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,16 +14,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BookOrderVO {
-	@NotNull
-	@Positive
+	@PositiveOrZero(message = "Order ID should be a positive or zero value")
 	private Long orderId;
 
-	@NotNull
-	@Positive
-	private Long userId;
+	@Size(max = 32, message = "User ID should not be longer than 32 characters")
+	private String userId;
 
-	@NotNull
-	@NotEmpty
+	@Size(max = 32, message = "Order type should not be longer than 32 characters")
 	private String orderType;
 
 	@Valid

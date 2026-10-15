@@ -21,14 +21,16 @@ import com.example.bookorder.services.vo.BookVO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
 
 @Validated
 @RestController
 @RequestMapping("/books")
+@RequiredArgsConstructor
 public class BooksController {
 
-	private BooksService booksService;
-	private BookConverter bookConverter;
+	private final BooksService booksService;
+	private final BookConverter bookConverter;
 
 	@PostMapping("/save")
 	public String save(@Valid @RequestBody BookRequest request) {

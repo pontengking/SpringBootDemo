@@ -1,0 +1,464 @@
+{
+  "info": {
+    "_postman_id": "d3f942ea-4a7d-4422-8487-2180b9c9e290",
+    "name": "Book System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28946215"
+  },
+  "item": [
+    {
+      "name": "GET BOOK BY ID",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/books/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELTE BOOK BY ID",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/books/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT/EDIT BOOK",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"string1\",\r\n  \"author\": \"string1\",\r\n  \"price\": 0.01,\r\n  \"unitsInStock\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/books/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SAVE BOOK",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"string\",\r\n  \"author\": \"string\",\r\n  \"price\": 0.01,\r\n  \"unitsInStock\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/books/save",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "save"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "BATCH SAVE",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "[{\r\n  \"title\": \"string1\",\r\n  \"author\": \"string1\",\r\n  \"price\": 0.01,\r\n  \"unitsInStock\": 2\r\n},{\r\n  \"title\": \"string2\",\r\n  \"author\": \"string2\",\r\n  \"price\": 0.02,\r\n  \"unitsInStock\": 2\r\n}]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/books/batchSave",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "batchSave"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "BOOK SEARCH",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"page\": 2,\r\n  \"pageSize\": 2\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/books/search",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "books",
+            "search"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET BOOK ORDERS",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"page\": 0,\r\n  \"pageSize\": 1,\r\n  \"orderId\": 0,\r\n  \"bookId\": 0,\r\n  \"userId\": \"string\",\r\n  \"orderType\": \"string\",\r\n  \"startDate\": \"2025-10-15T01:58:58.574Z\",\r\n  \"endDate\": \"2027-10-15T01:58:58.574Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/bookOrders",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "bookOrders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET BOOK ORDERS By ID",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"page\": 0,\r\n  \"pageSize\": 1,\r\n  \"orderId\": 0,\r\n  \"bookId\": 0,\r\n  \"userId\": \"string\",\r\n  \"orderType\": \"string\",\r\n  \"startDate\": \"2025-10-15T01:58:58.574Z\",\r\n  \"endDate\": \"2027-10-15T01:58:58.574Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/bookOrders",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "bookOrders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELET BOOK ORDERS By ID",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/bookOrders/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "bookOrders",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST BOOK ORDERS",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "  {\r\n    \"userId\": \"1123123\",\r\n    \"orderType\": \"purchase\",\r\n    \"bookOrderDetailVOs\": [\r\n      {\r\n        \"bookId\": 1,\r\n        \"quantity\": 100\r\n      }\r\n    ],\r\n    \"totalAmount\": 100\r\n  }\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/bookOrders",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "bookOrders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ExternalCall",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "book",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "book",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/bookOrders/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "bookOrders",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

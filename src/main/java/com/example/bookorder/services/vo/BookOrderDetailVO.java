@@ -1,9 +1,7 @@
 package com.example.bookorder.services.vo;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,12 +9,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BookOrderDetailVO {
-	@NotNull
-	@Positive
+	@PositiveOrZero(message = "Book ID should be a positive or zero value")
 	private Long bookId;
 
-	@Min(1)
-	@Max(1000000)
+	@Positive(message = "Quantity should be a positive value")
 	private int quantity;
 
 }

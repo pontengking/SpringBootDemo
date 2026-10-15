@@ -95,6 +95,9 @@ public class BooksService {
 		}
 		Specification<Books> specification = (root, query, builder) -> {
 			List<Predicate> predicates = new ArrayList<>();
+			if (vo.getBookId() != null) {
+				predicates.add(builder.equal(root.get("bookId"), vo.getBookId()));
+			}
 			if (vo.getTitle() != null) {
 				predicates.add(builder.equal(root.get("title"), vo.getTitle()));
 			}

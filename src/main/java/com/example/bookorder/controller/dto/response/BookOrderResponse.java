@@ -8,6 +8,6 @@ import com.example.bookorder.services.vo.BookOrderDetailVO;
 /**
  * HTTP response contract.
  */
-public record BookOrderResponse(Long orderId, Long userId, String orderType, List<BookOrderDetailVO> bookOrderDetailVOs,
-		BigDecimal getTotalAmount) {
+public record BookOrderResponse(Long orderId, String userId, String orderType,
+		List<BookOrderDetailVO> bookOrderDetailVOs, BigDecimal getTotalAmount) {
 }

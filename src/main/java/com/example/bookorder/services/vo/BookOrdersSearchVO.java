@@ -2,23 +2,22 @@ package com.example.bookorder.services.vo;
 
 import java.util.Date;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
 public class BookOrdersSearchVO {
-	@Size(max = 32, message = "Order ID should not be longer than 32 characters")
+	@PositiveOrZero(message = "Order ID should be a positive or zero value")
 	private Long orderId;
 
-	@Size(max = 32, message = "User ID should not be longer than 32 characters")
+	@PositiveOrZero(message = "User ID should be a positive or zero value")
 	private String userId;
 
-	@Size(max = 32, message = "Order type should not be longer than 32 characters")
 	private String orderType;
 
-	@Size(max = 32, message = "Book ID should not be longer than 32 characters")
+	@PositiveOrZero(message = "Book ID should be a positive or zero value")
 	private Long bookId;
 
 	private Date startDate;

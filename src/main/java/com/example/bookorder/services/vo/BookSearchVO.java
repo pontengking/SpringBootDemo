@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,10 @@ import lombok.Setter;
 @Setter
 @Getter
 public class BookSearchVO {
+
+	@PositiveOrZero(message = "Order ID should be a positive or zero value")
+	private Long bookId;
+
 	@Size(max = 200)
 	private String title;
 

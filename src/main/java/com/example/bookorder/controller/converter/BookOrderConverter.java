@@ -23,14 +23,25 @@ public class BookOrderConverter {
 				source.getBookOrderDetailVOs(), source.getTotalAmount());
 	}
 
+	/**
+	 * Build the service search criteria; a zero id is normalised to null so that no
+	 * id predicate is added to the query.
+	 */
 	public BookOrdersSearchVO convert2SearchBookOrderVO(BookOrderSearchRequest request) {
 		BookOrdersSearchVO vo = new BookOrdersSearchVO();
-		vo.setOrderId(request.getOrderId());
+		vo.setOrderId(positiveOrNull(request.getOrderId()));
 		vo.setUserId(request.getUserId());
 		vo.setOrderType(request.getOrderType());
-		vo.setBookId(request.getBookId());
+		vo.setBookId(positiveOrNull(request.getBookId()));
 		vo.setStartDate(request.getStartDate());
 		vo.setEndDate(request.getEndDate());
 		return vo;
+	}
+
+	/**
+	 * Map the "no filter" sentinel (null or zero) to null; ids are always positive.
+	 */
+	private Long positiveOrNull(Long id) {
+		return id == null || id <= 0L ? null : id;
 	}
 }
