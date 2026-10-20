@@ -99,10 +99,10 @@ public class BooksService {
 				predicates.add(builder.equal(root.get("bookId"), vo.getBookId()));
 			}
 			if (vo.getTitle() != null) {
-				predicates.add(builder.equal(root.get("title"), vo.getTitle()));
+				predicates.add(builder.like(root.get("title"), "%" + vo.getTitle() + "%"));
 			}
 			if (vo.getAuthor() != null) {
-				predicates.add(builder.equal(root.get("author"), vo.getAuthor()));
+				predicates.add(builder.like(root.get("author"), "%" + vo.getAuthor() + "%"));
 			}
 			if (vo.getMinPrice() != null && vo.getMaxPrice() != null
 					&& vo.getMinPrice().compareTo(vo.getMaxPrice()) > 0) {
