@@ -1,270 +1,256 @@
-# Book Order System
+﻿# Book Order System
 
-A Java 17, Spring Boot, Maven REST application. Local runs default to in-memory H2;
-automated tests use a separate in-memory H2 database. MariaDB remains an optional profile.
+Java 17, Spring Boot 3.5.16 and Maven application for books, orders with line items,
+and an external HTTP fetch example. It uses Spring MVC, Security, Bean Validation,
+Spring Data JPA and Lombok. Local startup defaults to in-memory H2; MariaDB is optional.
 
-## Project layout
+## Run locally
 
-One Maven module, with packages under `src/main/java/com/example/bookorder`:
-
-```text
-controller/       HTTP endpoints, advice, API conversion and response helpers
-domain/           catalog/order business orchestration and pagination rules
-services/         contracts, implementations and persistence conversion
-repository/       catalog/order repositories and persistence entities
-controller/dto/request/      JSON request DTOs and BaseRequest
-controller/dto/response/     JSON response DTOs and BaseResponse
-integration/      outbound SPI and HTTP client
-common/           request logging and JSON formatting
-common/config/    security configuration
-controller/enums/     API error codes
-```
-
-Dependencies flow `controller -> domain -> services -> repository`.
-External calls flow from services through the integration SPI to its HTTP client.
-Persistence conversion belongs to services; lower layers do not depend on HTTP DTOs.
-“Report” is interpreted as repository/database access; no reporting feature is introduced.
-Resources are in `src/main/resources`; existing tests are in `src/test/java`.
-Payment, inventory and discount features remain unimplemented.
-
-## Run
+Install a JDK compatible with Java 17 and configure `JAVA_HOME`, then run:
 
 ```powershell
-# Default: H2 in memory, no external database required.
-.\mvnw.cmd -Dmaven.test.skip=true clean package
+.\mvnw.cmd clean package
 java -jar target/book-order-system-1.0.0.jar
 ```
 
-Unix/macOS: `./mvnw -Dmaven.test.skip=true clean package`, then the same `java -jar` command.
+On Unix/macOS use `./mvnw clean package`. The wrapper may need network access to
+bootstrap Maven and resolve dependencies. To package without compiling or running tests,
+use `-Dmaven.test.skip=true`; this does not verify application behavior.
 
-The default `h2` profile runs `src/main/resources/db/init_db.sql` automatically before
-Hibernate validates the schema. Edit that file for local schema changes. It creates empty
-tables; add seed INSERT statements after the tables if needed. Data is lost when the JVM
-exits and the schema is recreated on the next launch. Initialization errors stop startup.
-An explicitly selected profile overrides the default; remove an old `mariadb` run-profile
-setting in the IDE or select `h2` explicitly. No H2 web console is enabled.
+- Base URL: `http://localhost:8080`
+- HTTP Basic defaults: `book` / `book`; override with `APP_USER` and `APP_PASSWORD`.
+- Public Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- Public OpenAPI document: `http://localhost:8080/v3/api-docs`
 
-For persistent MariaDB, set DB_URL, DB_USER and DB_PASSWORD, then run:
-`java -jar target/book-order-system-1.0.0.jar --spring.profiles.active=mariadb`.
-The H2 initialization script is configured only in the H2 profile, so it does not run on MariaDB.
+Business endpoints require Basic authentication. Send credentials preemptively and use
+`Content-Type: application/json` for JSON bodies. Use HTTPS and override demo credentials
+for deployments outside local development.
 
-The API is at `http://localhost:8080`. HTTP Basic demo credentials are `reader` / `change-me`.
-Override them with `APP_USER` and `APP_PASSWORD`; use HTTPS and non-demo credentials outside local
-development.
+## Database profiles
+
+The default `h2` profile uses the in-memory `TESTDB` database. Startup executes
+[`db/init_db.sql`](src/main/resources/db/init_db.sql), then Hibernate validates the schema
+with `ddl-auto=validate`. The script creates `books`, `book_orders` and `book_order_items`,
+with no seed rows. Initialization errors stop startup. Data disappears when the JVM exits.
+H2 is a runtime dependency and is included in the application package; no H2 web console
+is enabled. H2 connections and Hibernate JDBC timestamp binding use UTC.
+
+For persistent MariaDB, create the database and explicitly select the profile:
+
+```powershell
+$env:DB_URL = "jdbc:mariadb://localhost:3306/bookstore"
+$env:DB_USER = "bookstore"
+$env:DB_PASSWORD = "<your-database-password>"
+java -jar target/book-order-system-1.0.0.jar --spring.profiles.active=mariadb
+```
+
+Supply all three values rather than relying on the development defaults in
+`application-mariadb.properties`. MariaDB uses `ddl-auto=update`; it does not run the H2
+script or create the database itself. Connection failures do not fall back to H2.
+Versioned production migrations are not implemented.
+
+`src/test/resources/application-test.properties` provides a separate H2 database with
+`create-drop` for tests that explicitly activate the `test` profile. The current test
+classes use Mockito and do not start that database.
 
 ## API
 
-- `POST /api/books`, `GET /api/books/{id}`, `PUT /api/books/{id}`, `DELETE /api/books/{id}`
-- `POST /api/books/search` with `{"query":"java","page":0,"size":10}` — case-insensitive
-  title/author search using a JSON request DTO.
-- `POST /api/orders` with `{"bookId": 1, "quantity": 2}`
-- `POST /api/orders/search` with `{"page":0,"size":20}`
-- `GET /api/external/google` — calls the configured external page endpoint
+The current routes have no `/api` prefix. The table describes the value inside the
+standard response envelope's `data` field.
 
-All endpoints require HTTP Basic authentication. Application responses use HTTP 200 with a JSON envelope. A
-referenced-book deletion returns API code `CONFLICT`; missing resources use `NOT_FOUND`; invalid input uses
-`INVALID_REQUEST`. Orders snapshot the book price at creation.
+| Method | Path | Request | Successful data |
+| --- | --- | --- | --- |
+| POST | `/books/save` | Book object | Created ID as a string, e.g. `"1"` |
+| POST | `/books/batchSave` | Array of book objects | ID list as a string, e.g. `"[1, 2]"` |
+| GET | `/books/{id}` | Path ID | List containing one book, or `[]` if absent |
+| PUT | `/books/{id}` | Complete book object | `null` |
+| DELETE | `/books/{id}` | Path ID | `null` |
+| POST | `/books/search` | Book search object | Spring Data page of `BookVO` values |
+| POST | `/bookOrders` | Order object with line items | Created ID as a string |
+| GET | `/bookOrders/{id}` | Path ID | List containing one order, or `[]` if absent |
+| GET | `/bookOrders` | **JSON request body** with order search fields | Spring Data page of order responses |
+| DELETE | `/bookOrders/{id}` | Path ID | `null` |
+| GET | `/external/google` | None | External HTTP status, content type and content |
 
-Search endpoints require a JSON object body; `{}` is valid. Omitted or null page/size values
-default to page 0 and size 20. Page must be non-negative and size must be 1–100. Missing or
-null book search text means all books; surrounding whitespace is trimmed. Empty bodies,
-malformed JSON, and invalid bounds return `status: FAIL` with `errorCode: INVALID_REQUEST`. Collection
-GET/query-parameter calls must migrate
-to these POST endpoints. Resource IDs remain path variables for get, update, and delete.
+Order search currently requires a body on GET; it is not a query-parameter endpoint.
+Some clients and intermediaries do not support GET bodies. There is no
+`POST /bookOrders/search` mapping.
 
-## Standard JSON envelope
+### Books
 
-HTTP request DTOs extend `BaseRequest`; search DTOs inherit page/size from `PageRequest`.
-Jackson binds JSON to JavaBean fields, Bean Validation validates them, and Lombok provides
-getters/setters. The inherited `toString()` uses Jackson to produce a JSON string, including inherited fields.
-`BaseResponse.toString()` also returns JSON; `JsonLogFormatter.toJson()` accepts objects or maps and returns a safe JSON
-marker on serialization failure. Service DTOs remain independent.
+Create and update use `BookRequest`. All four fields are required:
 
-Every handled application response uses `BaseResponse<T>`. `status` is a string (`SUCCESS` or
-`FAIL`), not a boolean. Consumers must check it even when HTTP is 200. Success returns `data`
-with null error fields; failure returns null `data`. Successful deletion also has null `data`.
-The server creates a UUID trace ID and returns it in both the envelope and `X-Trace-Id` header.
-It is a debugging correlation ID, not an idempotency key.
+```json
+{
+  "title": "Java",
+  "author": "Author",
+  "price": 12.50,
+  "unitsInStock": 10
+}
+```
+
+Title and author must be nonblank, with maximum lengths of 200 and 150. Price must be
+at least 0.01, with at most ten integer digits and two fractional digits. Stock must
+be a nonnegative integer. PUT replaces these editable fields; it is not a partial update.
+
+Book search example:
+
+```json
+{"title":"Java","author":"Author","page":0,"pageSize":20}
+```
+
+Search accepts `title`, `author`, `minPrice` and `maxPrice`. It uses SQL `LIKE` substring
+predicates without trimming, lowercasing or escaping wildcard characters; case sensitivity
+depends on database collation. **The current price-range condition is reversed:** it adds
+`BETWEEN` only when `minPrice > maxPrice`. Normal ranges and one-sided bounds are ignored.
+
+Search pagination uses `page` and `pageSize`, not `size`. Missing or null values default
+to 0 and 20; page must be nonnegative and pageSize must be 1–100. An empty object `{}` is
+valid. Book search additionally rejects unpaged service requests and offsets above the
+JPA integer limit. Book lookup responses use `id`; book search content uses `bookId` and
+also includes audit fields from `BookVO`.
+
+### Orders
+
+Order creation binds directly to `BookOrderVO`:
+
+```json
+{
+  "userId": "reader-1",
+  "orderType": "ONLINE",
+  "bookOrderDetailVOs": [
+    {"bookId": 1, "quantity": 2}
+  ]
+}
+```
+
+Create the referenced books first. The service computes `totalAmount` from current book
+prices and quantities, ignoring a supplied total. It saves the order header followed by
+its items in one transaction. Items persist their unit price and item total as snapshots.
+Reads return order totals and detail entries containing book IDs and quantities; item
+price snapshots are not exposed by the current response DTO. Stock is stored on books,
+but placing an order does not check or decrement it. Payment and discount processing are
+not implemented.
+
+Order search accepts `orderId`, `bookId`, `userId`, `orderType`, `startDate`, `endDate`,
+`page` and `pageSize`. Zero or omitted ID filters mean no ID filter. User ID and order type
+use substring matching. When both dates are present, both `createdAt` and `updatedAt`
+must fall within the interval; a single date bound is ignored.
+
+The detail list must be non-null, and quantities must be positive. Validation remains
+incomplete: an empty detail list is accepted, book IDs are not required by the DTO, and
+user ID/order type have length constraints but no required-field validation. Do not assume
+the unused `BookOrderRequest` class describes this endpoint or imposes its quantity cap.
+
+## Response and error contract
+
+`ResponseAdvice` wraps application controller results in `BaseResponse<T>`; existing
+envelopes pass through once. Null/void results have `data: null`. Handled application,
+MVC and security outcomes use HTTP 200, so callers must inspect `status` and `errorCode`.
+Authentication failures still prevent controller execution.
+
+Example response for a book creation:
 
 ```json
 {
   "status": "SUCCESS",
   "errorCode": null,
   "errorDesc": null,
-  "data": {"id": 1, "title": "Java", "author": "Author", "price": 12.50},
+  "data": "1",
   "traceId": "server-generated-uuid"
 }
 ```
 
-```json
-{
-  "status": "FAIL",
-  "errorCode": "INTERNAL_ERROR",
-  "errorDesc": "An internal error occurred. Contact support with the trace ID.",
-  "data": null,
-  "traceId": "server-generated-uuid"
-}
+Failures use `status: "FAIL"`, null data and a public error description. Codes are defined
+in `common/exception/enums/ErrorCodeEnum.java`, including `INVALID_REQUEST`, `PARAM_INVALID`,
+`BOOK_NOT_FOUND`, `NOT_FOUND`, `CONFLICT`, `SYSTEM_BUSY`, `EXTERNAL_UNAVAILABLE`,
+`UNAUTHORIZED`, `FORBIDDEN`, `METHOD_NOT_ALLOWED`, `UNSUPPORTED_MEDIA_TYPE`, `NOT_ACCEPTABLE`
+and `INTERNAL_ERROR`. Missing book updates and missing books during order creation use
+`BOOK_NOT_FOUND`; missing GET-by-ID results are successful empty lists.
+
+The server supplies `X-Trace-Id` and the matching JSON trace ID. This is a correlation ID,
+not an idempotency key. Transport or serialization failures may prevent delivery of an
+envelope even after a write commits; blindly retrying a write can duplicate it.
+
+## Project layout
+
+One Maven module, rooted at `src/main/java/com/example/bookorder`:
+
+```text
+controller/          BooksController, BookOrdersController, ExternalController
+  advice/            ResponseAdvice and ExceptionHandler
+  converter/         HTTP/service mappings
+  dto/               Request and response types; request/base holds shared inputs
+  support/           Response, pagination and security helpers
+services/            BooksService, BookOrdersService, ExternalFetchService
+  vo/                Book/order service values and search criteria
+  response/          ExternalServiceResponse
+repository/          Spring Data JPA repositories
+  entity/            Books, BookOrders, BookOrderItems
+integration/         ExternalApiClient SPI/registry and GoogleClient
+common/              Configuration, exceptions, filters, logging and constants
 ```
 
-`ErrorCodeEnum` has explicit `code` and `description` fields (Lombok getters); responses use these values, not the enum
-constant name. It defines `INVALID_REQUEST`, `NOT_FOUND`, `CONFLICT`, `EXTERNAL_UNAVAILABLE`,
-`UNAUTHORIZED`, `FORBIDDEN`, `METHOD_NOT_ALLOWED`, `UNSUPPORTED_MEDIA_TYPE`, `NOT_ACCEPTABLE`,
-and `INTERNAL_ERROR`. Public descriptions never copy raw exception messages or SQL details.
-Controller advice handles application/MVC failures; security handlers handle authentication and
-access failures before controller invocation. Both return the same JSON contract with HTTP 200.
-Authentication is still enforced, so callers must send Basic credentials preemptively.
-Failures before application handling (for example proxy/connection errors) can still have other
-transport outcomes; clients must handle these separately.
+Book/order controllers call services directly, then repositories; there is no active
+`domain` orchestration layer. The external flow is
+`ExternalController -> ExternalFetchService -> ExternalApiClient -> GoogleClient`.
+The client registers under the key `google`; a single injected client is also supported
+as a fallback. Some service code currently depends on HTTP response types.
 
-This changes the response contract: business data is now under `data`, create/delete no longer
-return 201/204, and API failures no longer use HTTP 4xx/5xx. API failure monitoring must use
-`apiStatus` and `errorCode`, not only HTTP status. Do not blindly retry writes after an internal
-error: an uncertain response does not establish whether an operation committed.
+## External calls and logging
 
-## Database
+`EXTERNAL_PAGE_URL` overrides the default `https://www.google.com`. `GoogleClient` uses a
+three-second connect timeout and five-second request timeout, with no automatic retries.
+Client exceptions, null responses and upstream HTTP statuses of 400 or higher map to
+`EXTERNAL_UNAVAILABLE`. The external controller flow starts no database transaction;
+there is no transaction-suspension annotation or independent service deadline.
 
-Normal startup uses the default `mariadb` profile. Create a database on your MariaDB server and
-supply its connection settings through environment variables:
+Logs go to the console and `logs/book-order.log`. `LOG_DIR` and `LOG_FILE` customize the
+file destination; `HTTP_LOG_LEVEL=DEBUG` enables controller diagnostics. Rolling files
+use 10 MB segments, 14-day history and a 500 MB archive cap. HTTP logs include trace IDs,
+duration and API outcome as well as HTTP status; monitor API failures rather than HTTP
+status alone. Request logging must exclude secrets.
+
+## Build and tests
 
 ```powershell
-$env:DB_URL = "jdbc:mariadb://localhost:3306/bookstore"
-$env:DB_USER = "bookstore"
-$env:DB_PASSWORD = "<your-database-password>"
-java -jar target/book-order-system-1.0.0.jar
+.\mvnw.cmd test
+.\mvnw.cmd verify
 ```
 
-Use your actual host, port, database, username and password. The database must already exist and the
-user needs access. Do not commit credentials. An unreachable server or incorrect credentials fail
-startup; the application does not fall back to H2. An explicitly selected profile replaces the default;
-include `mariadb` when selecting other application profiles that need this connection configuration.
+The current JUnit Jupiter/Mockito test classes are `BooksServiceTest`,
+`BookOrdersServiceTest` and `BookOrdersControllerTest`. They exercise services and direct
+controller calls with mocked dependencies. They do not establish live HTTP security,
+Spring method validation, transaction rollback, locking or database correctness.
+No test-pass count is asserted here; this README update was checked against source and
+configuration without executing the suite or starting the application.
 
-The existing MariaDB `ddl-auto=update` setting creates/updates entity tables for development and
-preserves rows between restarts. It does not create the database itself. Production schema migrations
-remain unimplemented; do not treat automatic schema updates as a production migration strategy.
+`verify` generates JaCoCo coverage under `target/site/jacoco`. Packages named `vo`, `dto`,
+`request`, `response` and `entity` are excluded from coverage, not from compilation or tests.
 
-The repository's `save` writes through JPA to the configured database. Create/update/delete retain
-the existing service transactions and rollback behavior. Changing the database does not add durable
-idempotency or resolve order concurrency gaps; MariaDB locking and SQL behavior still need validation.
+Import the root `pom.xml` into the IDE and enable Lombok annotation processing.
+`.mvn/maven.config` selects `.maven/repository`; `.mvn/settings.xml` contains the absolute
+workspace cache path and needs updating if the checkout moves.
 
-H2 has Maven `test` scope and is excluded from the application jar. The existing Spring integration
-test activates the `test` profile and reads `src/test/resources/application-test.properties`, which
-uses an in-memory H2 database with `create-drop`. Test configuration is not packaged in the application.
-No tests are being run during this change, and no connection to a real database has been verified.
+## Known engineering gaps
 
-## ExternalApiClient
+[ENGINEERING_STANDARDS.md](ENGINEERING_STANDARDS.md) defines H2·3.1 requirements. Some local
+notes describe earlier implementations: the current book update mutates the locked entity
+(including stock), rather than issuing an explicit update query, and current controllers
+call services directly. This README documents current source behavior, not full compliance.
 
-`ExternalApiClient` is an outbound interface (a port) that declares `fetch()`. It lives in the
-application's `integration/spi` package. `GoogleClient` implements the HTTP details and timeout
-behavior. `GoogleService` depends on the interface, so another provider or a test double can
-replace the client without changing service logic. `PageMetadata` is the external HTTP metadata;
-its status is separate from the application's SUCCESS/FAIL response envelope.
-
-The flow is `ExternalController -> GoogleService -> ExternalApiClient -> GoogleClient`.
-Calls remain outside database transactions.
-
-## External API and logs
-
-The external URL defaults to `https://www.google.com`; set `EXTERNAL_PAGE_URL` to override it. The
-client enforces a 3-second connect timeout and a 5-second request timeout. External calls run outside
-database transactions, are not automatically retried, and return API code `EXTERNAL_UNAVAILABLE` when unavailable (HTTP
-200).
-
-The web filter logs HTTP status, API status/error code, trace ID, and duration. It does not log authentication headers.
-Controller DEBUG logs include bounded, single-line request DTO `toString()` output (up to 2048 characters). Only
-approved non-sensitive fields should be included; exclude secrets from future DTO toString implementations. Unexpected
-exception details are logged server-side, never returned to clients.
-
-## Tests
-
-The full 29-test JUnit Jupiter suite passes after converter regrouping and correction of JSON logging assertions. Run
-Maven test (using mvn test, or the wrapper when its bootstrap is available). Tests cover business pagination/delegation,
-service-level order price snapshots, the external client against a local HTTP server, and API
-CRUD/search/order/security behavior using H2 and MockMvc.
-
-## Request and response structure
-
-Each HTTP DTO has its own file under `controller/dto/request` or `controller/dto/response`. Service DTOs are
-under `services/request` and `services/response`. `BookVO` supplies title, author
-and price for creating/updating a book; `BookOrderVO` supplies book ID and quantity.
-Feature-specific CatalogApiConverter, OrderApiConverter and ExternalApiConverter map HTTP and service DTOs. Methods
-identify both types, for example bookRequest2BookServiceRequest.
-The book service is `BookServices1`, implemented by `BookServicesImpl` under `services/catalog/impl`.
-
-Tests use JUnit Jupiter (JUnit 5), with JUnit assertions. Mockito provides dependency mocks;
-MockMvc tests the HTTP contracts with H2.
-
-## Converter and IDE troubleshooting
-
-Open the root `pom.xml` as the Maven project. Catalog persistence mapping lives in
-`book`.
-Catalog and order entity types are in `repository.catalog.entity` and `repository.order.entity`; service request beans
-and response
-records live in `services/request` and `services/response`, respectively. Older snapshots using
-`com.example.demo.core.converter` are not part of the current build.
-
-The POM configures Lombok as an annotation processor. VS Code workspace settings enable
-Lombok support and automatic Maven build-configuration updates. If the current source still
-shows missing getter/setter or old-package errors after a successful `mvnw.cmd clean verify`,
-run **Java: Clean Java Language Server Workspace** from the command palette and reload.
-See the [Java extension settings](https://github.com/redhat-developer/vscode-java/blob/main/README.md).
-
-### Engineering review scope
-
-The converter/IDE diagnosis changes no application behavior, database writes, SQL, network
-calls, or monetary calculations. No messaging, caching, scheduled jobs, or parallel queries
-are introduced. The application is not fully H2·3.1 compliant:
-
-- Book and order creation have no durable idempotency-key contract; retries can create duplicates.
-- Order creation does not lock the book or declare a transaction timeout; concurrent book
-  updates/deletion are not serialized with the order's price snapshot.
-- External calls have HTTP timeouts and no automatic retries, but expose failure and unknown
-  outcomes through the same exception. `NOT_SUPPORTED` suspends a transaction; its `timeout`
-  attribute does not impose a seven-second service deadline.
-- Substring search scans normalized text and cannot use ordinary B-tree indexes. Page size is
-  bounded, but deep offsets and service-level pagination are not independently bounded.
-- Money uses exact decimals, but currency is unspecified; tenant isolation, UTC audit timestamps,
-  and business timezone/calendar semantics are not implemented. Do not use this demo as a
-  multi-tenant payment system.
-- Production schema migrations, actionable monitoring/recovery thresholds, and a three-step
-  release/rollback procedure remain undefined. MariaDB behavior needs separate validation.
-
-### Workspace dependency resolution
-
-Maven CLI reads `.mvn/maven.config` and uses the project-local `.maven/repository` cache.
-VS Code Java reads `.mvn/settings.xml` through the workspace Maven user-settings setting,
-so Jakarta, Spring and Lombok imports resolve from the same cache. The IDE settings use this
-workspace's absolute path; update both paths if the project moves. No offline mode is forced.
-If stale errors remain after the layout change, run **Java: Clean Java Language Server Workspace**
-and allow the root Maven project to reload.
-
-This import/configuration repair changes no business logic, validation rules, database writes,
-locks, transactions, SQL, network calls, retries, or money/tenant/time handling. Existing engineering
-gaps above remain; no new messaging, caching or scheduled work is introduced. Tests remain deferred.
-
-### Controller headers and service input validation
-
-All controllers require Basic Authorization through Spring Security. JSON POST/PUT requests require
-Content-Type: application/json. Accept: application/json is recommended; omitting Accept is allowed.
-Responses use JSON and include the server-generated X-Trace-Id. No custom request headers are required.
-
-Service implementations use @Validated and their interfaces declare @NotNull, @Valid and positive
-ID constraints. BookServiceRequest validates required text, maximum lengths, and decimal precision;
-OrderServiceRequest validates a positive book ID and quantity 1..1000. Calls must go through injected
-Spring beans for method validation to execute. Direct construction/self-invocation bypasses it.
-Invalid input maps to INVALID_REQUEST without exposing internal violation details. Input validation
-precedes row lookup; update/delete still lock and check the current database row before mutation.
-
-ApiExceptionHandler is one advice class with methods for distinct API error categories. Keeping these
-methods avoids a long conditional dispatcher and preserves NOT_FOUND, CONFLICT and other stable codes.
-SecurityErrorWriter remains separate because authentication failures occur before controller execution.
-
-Existing tests were only changed to use explicit local types. They were not executed: direct-construction
-service tests need to be adapted for proxy validation and the JSON toString assertions remain stale.
-Compilation alone does not verify runtime validation or header/error behavior. Existing idempotency,
-order concurrency, currency/tenant/time, SQL and operational limitations remain unresolved.
-Conversion classes are grouped by business feature under controller/<feature>/converter and
-services/<feature>/converter. Mapping names follow source2Destination, including collection shape.
-Common ConversionUtils.list2List handles ordered, sequential list conversion with explicit mappers;
-it rejects nulls and returns an unmodifiable list. PageResponseConverter.page2PageResponse only wraps
-already mapped page content. Service request DTOs use setters with field validation; keep each mutable
-request confined to its caller. Field copying remains explicit; no reflection-based copying is used.
+- Creates have no durable idempotency contract, so retries can create duplicates.
+- Book updates use a pessimistic lock and a five-second transaction; order creation/deletion
+  also have five-second transactions. Order creation does not lock books, and deletion
+  paths do not implement the required lock/validate/update sequence. Concurrent price,
+  deletion and order operations need database-level verification.
+- The H2 initialization script declares no foreign keys. Referenced-book deletion is not
+  guaranteed to return `CONFLICT`, and orphaned references are possible.
+- Price filtering and order validation have the limitations described above. Substring
+  searches and deep pagination need query-plan validation; order service pagination has
+  no independent bounds beyond the controller DTO.
+- Exact decimal money is used, but currency, tenant isolation and business timezone/calendar
+  rules are absent. H2 UTC settings do not verify MariaDB timestamp behavior.
+- Production migrations, actionable alert thresholds, recovery procedures and a three-step
+  release/rollback process remain undefined. Live MariaDB, concurrency and end-to-end
+  verification are required before claiming production readiness.
